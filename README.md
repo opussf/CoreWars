@@ -25,7 +25,6 @@ This simulator will have the ability for controlling the memory size of the test
 The player can also remove programs of their own at will.
 
 
-
 ### Starting a challenge
 Player A will challenge Player B.
 Player B will accept, or deny the challege.
