@@ -68,3 +68,8 @@ This only prohibits each player from first receiving the opposing program, and t
 [3]: http://us.battle.net/wow/en/ "World Of Warcraft"
 [4]: http://corewar.co.uk/vogtmann/index.htm
 [5]: http://corewar.co.uk/standards/cwg.txt
+
+
+
+
+-- "Awake" game site
