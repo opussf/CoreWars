@@ -9,6 +9,13 @@
 -- This is not intended to replace WoWBench, but to provide a stub structure for
 --     automated unit tests.
 
+actionLog = {
+}
+-- append actions to the log to track actions that may not have an other sideeffects.
+-- record the function calls
+-- [1] = "DoEmote(....)""
+
+
 local itemDB = {
 }
 
@@ -292,7 +299,7 @@ function getglobal( globalStr )
 	-- set the globals table to return what is needed from the 'globals'
 	return globals[ globalStr ]
 end
-function hooksecurefunc(externalFunc, internalFunc)
+function hooksecurefunc( externalFunc, internalFunc )
 end
 function strsplit( delim, subject, pieces )
 	-- delim is a string that defines all the bytes that may split the string
@@ -359,6 +366,7 @@ Frame = {
 		["SetAttribute"] = function() end,
 }
 FrameGameTooltip = {
+		["HookScript"] = function( self, callback ) end,
 		["GetName"] = function(self) return self.name end,
 		["SetOwner"] = function(self, newOwner) end, -- this is only for tooltip frames...
 		["ClearLines"] = function(self) end, -- this is only for tooltip frames...
@@ -409,7 +417,10 @@ Units = {
 }
 function CreateFrame( frameType, frameName, parentFrame, inheritFrame )
 --	print("CreateFrame: needing a new frame of type: "..(frameType or "nil"))
-	newFrame = Frame  -- deep copy of this?
+	newFrame = {}
+	for k,v in pairs( Frame ) do
+		newFrame[k] = v
+	end
 	if frameType and _G["Frame"..frameType] then  -- construct the name of the table to pull from, use _G to reference it.
 		for k, f in pairs(_G["Frame"..frameType]) do  -- add the methods in the sub frame to the returned frame
 			if k == "init" then  -- check to see if the key is 'init', which is a function to run when creating the Frame
@@ -423,8 +434,7 @@ function CreateFrame( frameType, frameName, parentFrame, inheritFrame )
 	--http://www.wowwiki.com/API_CreateFrame
 	return newFrame
 end
-
-function CreateFontString(name,...)
+function CreateFontString( name, ... )
 	--print("Creating new FontString: "..name)
 	FontString = {}
 	--	print("1")
@@ -438,8 +448,7 @@ function CreateFontString(name,...)
 	--print("FontString made?")
 	return FontString
 end
-
-function CreateStatusBar(name,...)
+function CreateStatusBar( name, ... )
 	StatusBar = {}
 	for k,v in pairs(Frame) do
 		StatusBar[k] = v
@@ -451,7 +460,6 @@ function CreateStatusBar(name,...)
 
 	return StatusBar
 end
-
 Slider = {
 		["GetName"] = function() return ""; end,
 		["SetText"] = function(text) end,
@@ -466,6 +474,31 @@ function CreateSlider( name, ... )
 	Slider["GetName"] = function(self) return self.name; end
 	Slider["SetText"] = function(text) end
 	return Slider
+end
+CheckButton = {
+		["SetChecked"] = function(self,value) self.isChecked=value; end,
+}
+function CreateCheckButton( name, ... )
+	me = {}
+	for k,v in pairs(CheckButton) do
+		me[k] = v
+	end
+	me.name = name
+	me[name.."Text"] = CreateFontString(name.."Text")
+	return me
+end
+EditBox = {
+		["SetText"] = function(self,text) self.text=text; end,
+		["SetCursorPosition"] = function(self,pos) self.cursorPosition=pos; end,
+
+}
+function CreateEditBox( name, ... )
+	me = {}
+	for k,v in pairs(EditBox) do
+		me[k] = v
+	end
+	me.name = name
+	return me
 end
 
 function ChatFrame_AddMessageEventFilter()
@@ -513,6 +546,15 @@ function CloseMail()
 	-- @TODO - Write this
 end
 ]]
+function CombatLogGetCurrentEventInfo()
+	-- return much the same info as used to be passed to the LOG_UNFILTERD event
+	-- set CombatLogCurrentEventInfo = {} to return specific data.
+	-- timestamp,event,hideCaster,srcGUID,srcName,srcFlags,srcFlags2,
+	--		targetGUID,targetName,targetFlags,targetFlags2,spellId = CombatLogGetCurrentEventInfo()
+
+	return unpack( CombatLogCurrentEventInfo )
+
+end
 function CombatTextSetActiveUnit( who )
 	-- http://www.wowwiki.com/API_CombatTextSetActiveUnit
 	-- @TODO - Write this
@@ -524,7 +566,10 @@ function CursorHasItem()
 		return true
 	end
 end
-function DoEmote( emote )
+function DoEmote( emote, target )
+	table.insert( actionLog,
+			"DoEmote( "..(emote or "nil")..", "..(target or "nil").." )"
+	)
 	-- not tested as the only side effect is the character doing an emote
 end
 function EquipItemByName( itemIn, slotIDIn )
@@ -644,7 +689,7 @@ function GetAchievementNumCriteria( achievementID )
 		return #Achievements[achievementID]["criteria"]
 	end
 end
-function GetAddOnMetadata(addon, field)
+function GetAddOnMetadata( addon, field )
 	-- returns addonData[field] for 'addon'
 	-- local addonData = { ["version"] = "1.0", }
 	return addonData[field]
@@ -933,6 +978,11 @@ end
 --	for _ in pairs( TradeSkillItems ) do count = count + 1 end
 --	return count
 --end
+function GetPlayerInfoByGUID( playerGUID )
+	-- http://wowprogramming.com/docs/api/GetPlayerInfoByGUID
+	-- localClass, englishClass, localRace, englishRace, gender, name, realm = GetPlayerInfoByGUID( playerGUID )
+	return "Warlock", "Warlock", "Human", "Human", 3, "testPlayer", "testRealm"
+end
 function GetRaidRosterInfo( raidIndex )
 	-- http://www.wowwiki.com/API_GetRaidRosterInfo
 	-- returns name, rank, subgroup, level, class, fileName, zone, online, isDead, role, isML
@@ -1001,6 +1051,10 @@ function HasNewMail()
 end
 ]]
 function InterfaceOptionsFrame_OpenToCategory()
+end
+function IsInGroup( groupType )
+	-- http://wowprogramming.com/docs/api/IsInGroup
+	return true
 end
 function IsInGuild()
 	-- http://www.wowwiki.com/API_IsInGuild
@@ -1170,6 +1224,9 @@ function SendChatMessage( msg, chatType, language, channel )
 	-- returns nil
 	-- @TODO: Expand this
 end
+function BNSendWhisper( id, msg )
+	-- @TODO: Expand this
+end
 function TaxiNodeCost( nodeId )
 	-- http://www.wowwiki.com/API_TaxiNodeCost
 	return TaxiNodes[nodeId].cost
@@ -1281,3 +1338,9 @@ end
 
 --/script for k,v in pairs(C_TradeSkillUI.GetAllRecipeIDs()) do print(k..":"..v) end
 --/script for k,v in pairs(C_TradeSkillUI.GetAllRecipeIDs()) do print(k..":"..v) end
+
+----------
+
+function IsQuestFlaggedCompleted( questID )
+	return nil
+end
