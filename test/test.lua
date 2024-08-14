@@ -1,18 +1,22 @@
 #!/usr/bin/env lua
 
-addonData = { ["Version"] = "1.0",
-}
-
 require "wowTest"
 
 test.outFileName = "testOut.xml"
 
-package.path = "../src/?.lua;'" .. package.path
-require "Corewars"
+-- require the file to test
+ParseTOC( "../src/Corewars.toc" )
+
+imp = "mov 0 1"
+dwarf = "add #4 3\nmov 2 @2\njmp -2\ndat #0 #4"
 
 -- addon setup
 function test.before()
 	Corewars.Init()
+	Corewars.programs = {
+		[1] = {},
+		[2] = {},
+	}
 end
 function test.after()
 end
@@ -24,6 +28,59 @@ function test.test_smallerField()
 	Corewars.Init()
 	assertIsNil( Corewars.coreMemory[5000] )
 end
+function test.test_SetProgram_simpleOneLine_imp_1()
+	Corewars.SetProgram( 1, imp )
+	assertEquals( "mov 0 1", Corewars.programs[1][1] )
+end
+function test.test_SetProgram_multiline_dwarf_2()
+	Corewars.SetProgram( 2, dwarf )
+	assertEquals( "dat #0 #4", Corewars.programs[2][4] )
+end
+function test.test_LoadProgramAtPosition_imp()
+	Corewars.SetProgram( 1, imp )
+	Corewars.LoadProgramAtPosition( 1, 0 )
+	--assertEquals( 352321537, Corewars.coreMemory[0] )
+	-- mov = 1 * 2 ^ 28
+	-- 0   = relative 0  = 1 * 2 ^ 26 + 0 * 2 ^ 12
+	-- 1   = relative 0  = 1 * 2 ^ 24 + 1 * 2 ^ 0
+	-- = 1 * 2 ^ 28 + ( 1 *2 ^ 26 + 0 * 2 ^ 12 ) + ( 1 * 2 ^ 24 + 1 * 2 ^ 0 )
+
+	-- 268435456 + ( 67108864 + 0 ) + ( 16777216 + 1 ) = 352321537
+
+end
+
+
+
+
+
+
+--[[
+
+function test.test_parseAddress_immediate()
+	mode, value, bitfield = Corewars.ParseAddress( "#4" )
+	assertEquals( "#", mode )
+	assertEquals( 4, value )
+	assertEquals( 0, bitfield )
+end
+function test.test_parseAddress_immediate_neg()
+	mode, value, bitfield = Corewars.ParseAddress( "#-4" )
+	assertEquals( "#", mode )
+	assertEquals( -4, value )
+	assertEquals( 0, bitfield )
+end
+function test.test_parseAddress_indirect()
+	mode, value, bitfield = Corewars.ParseAddress( "@7" )
+	assertEquals( "@", mode )
+	assertEquals( 7, value )
+	assertEquals( 2, bitfield )
+end
+function test.test_parseAddress_indirect_neg()
+	mode, value, bitfield = Corewars.ParseAddress( "@-7" )
+	assertEquals( "@", mode )
+	assertEquals( -7, value )
+	assertEquals( 2, bitfield )
+end
+
 function test.test_encodeAddress_immediate()
 	assertEquals( 14, Corewars.EncodeAddress( "#4", 10 ) )
 end
@@ -85,6 +142,7 @@ function test.test_emptyField()
 	print( x )
 
 end
+]]
 
 test.run()
 

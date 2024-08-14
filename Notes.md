@@ -1,0 +1,1 @@
+http://vyznev.net/corewar/guide.html

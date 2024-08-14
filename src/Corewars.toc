@@ -1,0 +1,8 @@
+## Title: CoreWars
+## Interface: @INTERFACE@
+## Notes: CoreWars (@VERSION@)
+## Author: opussf
+## Version: @VERSION@
+## Description: Play Corewars
+
+Corewars.lua
