@@ -1,0 +1,23 @@
+{
+  "name": "corewars",
+  "version": "1.0.0",
+  "description": "CoreWars JS",
+  "keywords": [
+    "game",
+    "corewars"
+  ],
+  "license": "ISC",
+  "author": "Charles Gordon",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "gulp build",
+    "dev": "gulp watch",
+    "clean": "gulp clean",
+    "typecheck": "tsc --noEmit",
+    "visual": "gulp visual"
+  },
+  "devDependencies": {
+  }
+}
