@@ -18,10 +18,10 @@ const del = require('del');
 // const httpProxy = require('http-proxy');         // Require the http-proxy module
 // const removeLogging = require('gulp-remove-logging');  // remove console.log
 
-// const argv = yargs.argv;
-// let isProd = argv.prod; // Use `--prod` flag to enable production mode
-// let isDebug = argv.debug;  // Use --debug flag to NOT remove console.log
-// let isShuttingDown = false;
+const argv = yargs.argv;
+let isProd = argv.prod; // Use `--prod` flag to enable production mode
+let isDebug = argv.debug;  // Use --debug flag to NOT remove console.log
+let isShuttingDown = false;
 
 // Paths
 const paths = {
