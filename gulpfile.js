@@ -1,63 +1,63 @@
 const gulp = require('gulp');
-const concat = require('gulp-concat');
-const uglify = require('gulp-uglify');
-const cleanCSS = require('gulp-clean-css');
-const rename = require('gulp-rename');
-const connect = require('gulp-connect');
-const htmlmin = require('gulp-htmlmin');
-const gulpIf = require('gulp-if');
+// const concat = require('gulp-concat');
+// const uglify = require('gulp-uglify');
+// const cleanCSS = require('gulp-clean-css');
+// const rename = require('gulp-rename');
+// const connect = require('gulp-connect');
+// const htmlmin = require('gulp-htmlmin');
+// const gulpIf = require('gulp-if');
 const yargs = require('yargs');
 const git = require('gulp-git');
-const replace = require('gulp-replace');
-const rsync = require('gulp-rsync');
+// const replace = require('gulp-replace');
+// const rsync = require('gulp-rsync');
 const del = require('del');
-const eslint = require('gulp-eslint');
-const jsValidate = require('gulp-jsvalidate');
-const phplint = require('gulp-phplint');
-const connectPHP = require('gulp-connect-php');  // PHP server
-const httpProxy = require('http-proxy');         // Require the http-proxy module
-const removeLogging = require('gulp-remove-logging');  // remove console.log
+// const eslint = require('gulp-eslint');
+// const jsValidate = require('gulp-jsvalidate');
+// const phplint = require('gulp-phplint');
+// const connectPHP = require('gulp-connect-php');  // PHP server
+// const httpProxy = require('http-proxy');         // Require the http-proxy module
+// const removeLogging = require('gulp-remove-logging');  // remove console.log
 
-const argv = yargs.argv;
-let isProd = argv.prod; // Use `--prod` flag to enable production mode
-let isDebug = argv.debug;  // Use --debug flag to NOT remove console.log
-let isShuttingDown = false;
+// const argv = yargs.argv;
+// let isProd = argv.prod; // Use `--prod` flag to enable production mode
+// let isDebug = argv.debug;  // Use --debug flag to NOT remove console.log
+// let isShuttingDown = false;
 
 // Paths
 const paths = {
-    scripts:   ['src/app/**/*.js','src/js/**/*.js'],
-    styles:    ['src/css/**/*.css'],
-    html:      ['src/**/*.html'],
-    misc:      ['src/**/.htaccess'],
-    favicon:   ['src/images/*.ico'],
-    images:    ['src/images/*.png'],
-    server:    ['src/server/**/*.php'],
-    bootstrap: {
-        style: {
-            src: 'node_modules/bootstrap/dist/css/bootstrap.css',
-            dest: 'dist/css/'
-        },
-        script: {
-            src: 'node_modules/bootstrap/dist/js/bootstrap.min.js',
-            dest: 'dist/js/'
-        }
-    },
-    fontawesome: {
-        style: {
-            src: 'node_modules/font-awesome/css/font-awesome.css',
-            dest: 'dist/font-awesome/css/'
-        },
-        fonts: {
-            src: 'node_modules/font-awesome/fonts/*',
-            dest: 'dist/font-awesome/fonts/'
-        }
-    },
-    angular: {
-        script: {
-            src: ['node_modules/angular/angular.min.js','node_modules/angular-route/angular-route.min.js','node_modules/angular-cookies/angular-cookies.min.js'],
-            dest: 'dist/js/'
-        },
-    },
+    scripts:   ['web/app/**/*.js','web/js/**/*.js'],
+    styles:    ['web/css/**/*.css'],
+    html:      ['web/**/*.html'],
+    misc:      ['web/**/.htaccess'],
+    favicon:   ['web/images/*.ico'],
+    images:    ['web/images/*.png'],
+    server:    ['web/server/**/*.php']
+    // bootstrap: {
+    //     style: {
+    //         src: 'node_modules/bootstrap/dist/css/bootstrap.css',
+    //         dest: 'dist/css/'
+    //     },
+    //     script: {
+    //         src: 'node_modules/bootstrap/dist/js/bootstrap.min.js',
+    //         dest: 'dist/js/'
+    //     }
+    // },
+    // fontawesome: {
+    //     style: {
+    //         src: 'node_modules/font-awesome/css/font-awesome.css',
+    //         dest: 'dist/font-awesome/css/'
+    //     },
+    //     fonts: {
+    //         src: 'node_modules/font-awesome/fonts/*',
+    //         dest: 'dist/font-awesome/fonts/'
+    //     }
+    // },
+    // angular: {
+    //     script: {
+    //         src: ['node_modules/angular/angular.min.js','node_modules/angular-route/angular-route.min.js','node_modules/angular-cookies/angular-cookies.min.js'],
+    //         dest: 'dist/js/'
+    //     },
+    // },
 };
 
 global.gitVersion = 'local';
@@ -176,27 +176,27 @@ gulp.task('watch', function () {
     gulp.watch(paths.server, gulp.series('server'));
 });
 
-function bootstrap() {
-    gulp.src(paths.bootstrap.style.src)
-        .pipe(cleanCSS())
-        .pipe(gulp.dest(paths.bootstrap.style.dest));
-    return gulp.src(paths.bootstrap.script.src)
-        .pipe(gulp.dest(paths.bootstrap.script.dest));
-}
+// function bootstrap() {
+//     gulp.src(paths.bootstrap.style.src)
+//         .pipe(cleanCSS())
+//         .pipe(gulp.dest(paths.bootstrap.style.dest));
+//     return gulp.src(paths.bootstrap.script.src)
+//         .pipe(gulp.dest(paths.bootstrap.script.dest));
+// }
 
-function fontawesome() {
-    gulp.src(paths.fontawesome.fonts.src)
-        .pipe(gulp.dest(paths.fontawesome.fonts.dest));
-    return gulp.src(paths.fontawesome.style.src)
-        .pipe(cleanCSS())
-        .pipe(concat('font-awesome.min.css'))
-        .pipe(gulp.dest(paths.fontawesome.style.dest));
-}
+// function fontawesome() {
+//     gulp.src(paths.fontawesome.fonts.src)
+//         .pipe(gulp.dest(paths.fontawesome.fonts.dest));
+//     return gulp.src(paths.fontawesome.style.src)
+//         .pipe(cleanCSS())
+//         .pipe(concat('font-awesome.min.css'))
+//         .pipe(gulp.dest(paths.fontawesome.style.dest));
+// }
 
-function angular() {
-    return gulp.src(paths.angular.script.src)
-        .pipe(gulp.dest(paths.angular.script.dest));
-}
+// function angular() {
+//     return gulp.src(paths.angular.script.src)
+//         .pipe(gulp.dest(paths.angular.script.dest));
+// }
 
 // Task to start the PHP server
 gulp.task('php-serve', function() {
@@ -322,7 +322,7 @@ gulp.task('send', function () {
         .pipe(rsync({
             root: 'dist',
             hostname: 'mycrewsheet',
-            destination: '/home2/opus/public_html/QREvents',
+            destination: '/home2/opus/public_html/CoreWars',
             exclude: [".DS_Store"],
             recursive: true,
             silent: false,
