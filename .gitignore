@@ -1,3 +1,10 @@
+# General
 .DS_Store
+
+# Addon
 target/
+
+# JS Project
+dist/
+node_modules
 
