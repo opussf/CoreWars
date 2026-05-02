@@ -100,8 +100,8 @@ gulp.task('scripts', function () {
             .on('error', function( err ) {
                 console.error("JS Validation Error:", err.message);
                 this.emit('end'); }))
-        .pipe(gulpIf(isProd, concat('${projectName}.min.js')))
-        .pipe(gulpIf(!isProd, concat('${projectName}.js')))
+        .pipe(gulpIf(isProd, concat(`${projectName}.min.js`)))
+        .pipe(gulpIf(!isProd, concat(`${projectName}.js`)))
         .pipe(gulp.dest('dist'))
         .pipe(gulpIf(isProd, uglify()))
         .pipe(gulpIf(isProd, gulp.dest('dist')))
@@ -116,8 +116,8 @@ gulp.task('scripts', function () {
 // Task: Minify CSS
 gulp.task('styles', function () {
     return gulp.src(paths.styles)
-        .pipe(gulpIf(isProd, concat('${projectName}.min.css')))
-        .pipe(gulpIf(!isProd, concat('${projectName}.css')))
+        .pipe(gulpIf(isProd, concat(`${projectName}.min.css`)))
+        .pipe(gulpIf(!isProd, concat(`${projectName}.css`)))
         .pipe(gulp.dest('dist'))
         .pipe(gulpIf(isProd, cleanCSS()))
         .pipe(gulp.dest('dist'))
@@ -128,8 +128,8 @@ gulp.task('styles', function () {
 gulp.task('html-files', function () {
     return gulp.src(paths.html)
         .pipe(replace('@VERSION@', global.gitVersion))
-        .pipe(gulpIf(isProd, replace('${projectName}.js', '${projectName}.min.js')))
-        .pipe(gulpIf(isProd, replace('${projectName}.css', '${projectName}.min.css')))
+        .pipe(gulpIf(isProd, replace(`${projectName}.js`, `${projectName}.min.js`)))
+        .pipe(gulpIf(isProd, replace(`${projectName}.css`, `${projectName}.min.css`)))
         .pipe(gulpIf(isProd, htmlmin({ collapseWhitespace: true })))  // use the --prod to minify
         .pipe(gulp.dest('dist'))
         .pipe(connect.reload());
