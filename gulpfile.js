@@ -30,7 +30,7 @@ const paths = {
     // scripts:   ['web/app/**/*.js','web/js/**/*.js'],
     scripts:   ['web/js/**/*.js'],
     styles:    ['web/css/**/*.css'],
-    html:      ['web/**/*.html'],
+    html:      ['web/html/*.html'],
     misc:      ['web/**/.htaccess'],
     favicon:   ['web/images/*.ico'],
     images:    ['web/images/*.png'],
