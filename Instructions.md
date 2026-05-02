@@ -10,3 +10,6 @@ To Build:
 
 `npm install <module> --save-dev`
 
+## Run locally
+
+`npx gulp local`
