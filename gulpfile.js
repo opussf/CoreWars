@@ -1,22 +1,24 @@
+const projectName = "corewars";
+
 const gulp = require('gulp');
-// const concat = require('gulp-concat');
-// const uglify = require('gulp-uglify');
-// const cleanCSS = require('gulp-clean-css');
+const concat = require('gulp-concat');
+const uglify = require('gulp-uglify');
+const cleanCSS = require('gulp-clean-css');
 // const rename = require('gulp-rename');
-// const connect = require('gulp-connect');
-// const htmlmin = require('gulp-htmlmin');
-// const gulpIf = require('gulp-if');
+const connect = require('gulp-connect');
+const htmlmin = require('gulp-htmlmin');
+const gulpIf = require('gulp-if');
 const yargs = require('yargs');
 const git = require('gulp-git');
-// const replace = require('gulp-replace');
+const replace = require('gulp-replace');
 // const rsync = require('gulp-rsync');
 const del = require('del');
-// const eslint = require('gulp-eslint');
-// const jsValidate = require('gulp-jsvalidate');
+const eslint = require('gulp-eslint');
+const jsValidate = require('gulp-jsvalidate');
 // const phplint = require('gulp-phplint');
 // const connectPHP = require('gulp-connect-php');  // PHP server
 // const httpProxy = require('http-proxy');         // Require the http-proxy module
-// const removeLogging = require('gulp-remove-logging');  // remove console.log
+const removeLogging = require('gulp-remove-logging');  // remove console.log
 
 const argv = yargs.argv;
 let isProd = argv.prod; // Use `--prod` flag to enable production mode
@@ -25,7 +27,8 @@ let isShuttingDown = false;
 
 // Paths
 const paths = {
-    scripts:   ['web/app/**/*.js','web/js/**/*.js'],
+    // scripts:   ['web/app/**/*.js','web/js/**/*.js'],
+    scripts:   ['web/js/**/*.js'],
     styles:    ['web/css/**/*.css'],
     html:      ['web/**/*.html'],
     misc:      ['web/**/.htaccess'],
@@ -97,8 +100,8 @@ gulp.task('scripts', function () {
             .on('error', function( err ) {
                 console.error("JS Validation Error:", err.message);
                 this.emit('end'); }))
-        .pipe(gulpIf(isProd, concat('Events.min.js')))
-        .pipe(gulpIf(!isProd, concat('Events.js')))
+        .pipe(gulpIf(isProd, concat('${projectName}.min.js')))
+        .pipe(gulpIf(!isProd, concat('${projectName}.js')))
         .pipe(gulp.dest('dist'))
         .pipe(gulpIf(isProd, uglify()))
         .pipe(gulpIf(isProd, gulp.dest('dist')))
@@ -113,8 +116,8 @@ gulp.task('scripts', function () {
 // Task: Minify CSS
 gulp.task('styles', function () {
     return gulp.src(paths.styles)
-        .pipe(gulpIf(isProd, concat('Events.min.css')))
-        .pipe(gulpIf(!isProd, concat('Events.css')))
+        .pipe(gulpIf(isProd, concat('${projectName}.min.css')))
+        .pipe(gulpIf(!isProd, concat('${projectName}.css')))
         .pipe(gulp.dest('dist'))
         .pipe(gulpIf(isProd, cleanCSS()))
         .pipe(gulp.dest('dist'))
@@ -125,8 +128,8 @@ gulp.task('styles', function () {
 gulp.task('html-files', function () {
     return gulp.src(paths.html)
         .pipe(replace('@VERSION@', global.gitVersion))
-        .pipe(gulpIf(isProd, replace('Events.js', 'Events.min.js')))
-        .pipe(gulpIf(isProd, replace('Events.css', 'Events.min.css')))
+        .pipe(gulpIf(isProd, replace('${projectName}.js', '${projectName}.min.js')))
+        .pipe(gulpIf(isProd, replace('${projectName}.css', '${projectName}.min.css')))
         .pipe(gulpIf(isProd, htmlmin({ collapseWhitespace: true })))  // use the --prod to minify
         .pipe(gulp.dest('dist'))
         .pipe(connect.reload());
@@ -173,7 +176,7 @@ gulp.task('watch', function () {
     gulp.watch(paths.scripts, gulp.series('scripts'));
     gulp.watch(paths.styles, gulp.series('styles'));
     gulp.watch(paths.html, gulp.series('html'));
-    gulp.watch(paths.server, gulp.series('server'));
+    // gulp.watch(paths.server, gulp.series('server'));
 });
 
 // function bootstrap() {
@@ -199,33 +202,33 @@ gulp.task('watch', function () {
 // }
 
 // Task to start the PHP server
-gulp.task('php-serve', function() {
-    connectPHP.server({
-        base: 'dist',      // Your base folder (where your PHP files are located)
-        port: 8000,      // Port to run the PHP server on
-        keepalive: true,  // Keep server running
-        middleware: function () {
-            return [
-                function (req, res, next) {
-                    if (req.url.startsWith('/QREvents/')) {
-                        req.url = req.url.replace('/QREvents/', '/');
-                    }
-                    next();
-                },
-                function customLogger(req, res, next) {
-                    console.log(`PHP Request: ${req.method} ${req.url}`);
-                    next();
-                }
-            ]
-        }
-    });
-});
+// gulp.task('php-serve', function() {
+//     connectPHP.server({
+//         base: 'dist',      // Your base folder (where your PHP files are located)
+//         port: 8000,      // Port to run the PHP server on
+//         keepalive: true,  // Keep server running
+//         middleware: function () {
+//             return [
+//                 function (req, res, next) {
+//                     if (req.url.startsWith('/QREvents/')) {
+//                         req.url = req.url.replace('/QREvents/', '/');
+//                     }
+//                     next();
+//                 },
+//                 function customLogger(req, res, next) {
+//                     console.log(`PHP Request: ${req.method} ${req.url}`);
+//                     next();
+//                 }
+//             ]
+//         }
+//     });
+// });
 
 // Task: Live Reload Server
 gulp.task('serve', function () {
-    bootstrap();
-    fontawesome();
-    angular();
+    // bootstrap();
+    // fontawesome();
+    // angular();
     connect.server({
         root: 'dist',
         livereload: true,
@@ -235,8 +238,8 @@ gulp.task('serve', function () {
         middleware: function () {
             return [
                 function (req, res, next) {
-                    if (req.url.startsWith('/QREvents/')) {
-                        req.url = req.url.replace('/QREvents/', '/');
+                    if (req.url.startsWith('/Corewars/')) {
+                        req.url = req.url.replace('/Corewars/', '/');
                     }
                     next();
                 },
@@ -350,6 +353,6 @@ gulp.task('watch-deploy', function () {
 
 // Default Task
 gulp.task('default', gulp.parallel('scripts', 'styles', 'html', 'misc', 'favicon', 'images', 'server' ));
-gulp.task('local', gulp.parallel('scripts', 'styles', 'html', 'misc', 'favicon', 'images', 'server', 'watch', 'php-serve', 'serve' ));
+gulp.task('local', gulp.parallel('scripts', 'styles', 'html', 'misc', 'favicon', 'images', 'watch', 'serve')); // 'server', 'php-serve', 'serve' ));
 gulp.task('deploy', gulp.series('default', 'send' ));
 gulp.task('develop', gulp.series('clean', 'default', 'send', 'watch-deploy' ));

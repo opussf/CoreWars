@@ -17,8 +17,19 @@
   },
   "devDependencies": {
     "del": "^5.1.0",
+    "eslint": "^9.23.0",
     "gulp": "^5.0.1",
+    "gulp-clean-css": "^4.3.0",
+    "gulp-concat": "^2.6.1",
+    "gulp-connect": "^5.7.0",
+    "gulp-eslint": "^6.0.0",
     "gulp-git": "^2.11.0",
+    "gulp-htmlmin": "^5.0.1",
+    "gulp-if": "^3.0.0",
+    "gulp-jsvalidate": "^5.0.0",
+    "gulp-remove-logging": "^1.2.0",
+    "gulp-replace": "^1.1.4",
+    "gulp-uglify": "^3.0.2",
     "yargs": "^17.7.2"
   }
 }
