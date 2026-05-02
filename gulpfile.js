@@ -1,57 +1,355 @@
 const gulp = require('gulp');
-const ts = require('gulp-typescript');
-const { deleteAsync } = require('del');
-const { spawn } = require('child_process');
+const concat = require('gulp-concat');
+const uglify = require('gulp-uglify');
+const cleanCSS = require('gulp-clean-css');
+const rename = require('gulp-rename');
+const connect = require('gulp-connect');
+const htmlmin = require('gulp-htmlmin');
+const gulpIf = require('gulp-if');
+const yargs = require('yargs');
+const git = require('gulp-git');
+const replace = require('gulp-replace');
+const rsync = require('gulp-rsync');
+const del = require('del');
+const eslint = require('gulp-eslint');
+const jsValidate = require('gulp-jsvalidate');
+const phplint = require('gulp-phplint');
+const connectPHP = require('gulp-connect-php');  // PHP server
+const httpProxy = require('http-proxy');         // Require the http-proxy module
+const removeLogging = require('gulp-remove-logging');  // remove console.log
 
-const tsProject = ts.createProject('tsconfig.json');
+const argv = yargs.argv;
+let isProd = argv.prod; // Use `--prod` flag to enable production mode
+let isDebug = argv.debug;  // Use --debug flag to NOT remove console.log
+let isShuttingDown = false;
 
+// Paths
 const paths = {
-	ts: ['src/**/*.ts'],
-	tests: ['tests/**/*.ts', 'tests/visual/*.html'],
+    scripts:   ['src/app/**/*.js','src/js/**/*.js'],
+    styles:    ['src/css/**/*.css'],
+    html:      ['src/**/*.html'],
+    misc:      ['src/**/.htaccess'],
+    favicon:   ['src/images/*.ico'],
+    images:    ['src/images/*.png'],
+    server:    ['src/server/**/*.php'],
+    bootstrap: {
+        style: {
+            src: 'node_modules/bootstrap/dist/css/bootstrap.css',
+            dest: 'dist/css/'
+        },
+        script: {
+            src: 'node_modules/bootstrap/dist/js/bootstrap.min.js',
+            dest: 'dist/js/'
+        }
+    },
+    fontawesome: {
+        style: {
+            src: 'node_modules/font-awesome/css/font-awesome.css',
+            dest: 'dist/font-awesome/css/'
+        },
+        fonts: {
+            src: 'node_modules/font-awesome/fonts/*',
+            dest: 'dist/font-awesome/fonts/'
+        }
+    },
+    angular: {
+        script: {
+            src: ['node_modules/angular/angular.min.js','node_modules/angular-route/angular-route.min.js','node_modules/angular-cookies/angular-cookies.min.js'],
+            dest: 'dist/js/'
+        },
+    },
+};
+
+global.gitVersion = 'local';
+gulp.task('gitInfo', function(cb) {  // cb is callback
+    let gitVersion = "";
+    git.exec({args: 'describe --tags --always --dirty', quiet: true}, function( err, stdout ) {
+        if( err ) {
+            console.error( "Error in git describe: ", err);
+            return cb(err);
+        }
+        gitVersion = stdout.trim();
+        git.revParse({args: '--abbrev-ref HEAD', quiet: true}, (err, branch) => {
+            if( err ) {
+                console.error( "Error in git rev-parse: ", err );
+                return cb(err);
+            }
+            if( branch.trim() !== "master" ) {
+                branch = branch.trim().replace(/\//g, "_");
+                gitVersion += "-" + branch;
+            }
+            global.gitVersion = gitVersion;
+            console.log( "global.gitVersion set to: ", global.gitVersion );
+            isDebug = ( argv.debug || branch.trim() !== "master" );
+            isProd = ( argv.prod || branch.trim() === "master" );
+            cb();
+        });
+    });
+});
+
+// Task: Minify & Bundle JavaScript
+gulp.task('scripts', function () {
+    return gulp.src(paths.scripts)
+        .pipe(gulpIf(isProd, removeLogging({verbose: true})))
+        .pipe(gulpIf(!isDebug, removeLogging({verbose: true})))
+        .pipe(eslint())
+        .pipe(jsValidate()
+            .on('error', function( err ) {
+                console.error("JS Validation Error:", err.message);
+                this.emit('end'); }))
+        .pipe(gulpIf(isProd, concat('Events.min.js')))
+        .pipe(gulpIf(!isProd, concat('Events.js')))
+        .pipe(gulp.dest('dist'))
+        .pipe(gulpIf(isProd, uglify()))
+        .pipe(gulpIf(isProd, gulp.dest('dist')))
+        .pipe(connect.reload())
+        .on('error', function( err ) {
+            console.error("Error:", err.message);
+            console.error( err );
+            this.emit('end');
+        });
+});
+
+// Task: Minify CSS
+gulp.task('styles', function () {
+    return gulp.src(paths.styles)
+        .pipe(gulpIf(isProd, concat('Events.min.css')))
+        .pipe(gulpIf(!isProd, concat('Events.css')))
+        .pipe(gulp.dest('dist'))
+        .pipe(gulpIf(isProd, cleanCSS()))
+        .pipe(gulp.dest('dist'))
+        .pipe(connect.reload());
+});
+
+// Task: Copy HTML Files
+gulp.task('html-files', function () {
+    return gulp.src(paths.html)
+        .pipe(replace('@VERSION@', global.gitVersion))
+        .pipe(gulpIf(isProd, replace('Events.js', 'Events.min.js')))
+        .pipe(gulpIf(isProd, replace('Events.css', 'Events.min.css')))
+        .pipe(gulpIf(isProd, htmlmin({ collapseWhitespace: true })))  // use the --prod to minify
+        .pipe(gulp.dest('dist'))
+        .pipe(connect.reload());
+});
+
+gulp.task('html', gulp.series('gitInfo', 'html-files'));
+
+// Task: Copy Misc Files
+gulp.task('misc', function () {
+    return gulp.src(paths.misc)
+        .pipe(gulp.dest('dist'))
+        .pipe(connect.reload());
+});
+
+gulp.task('favicon', function () {
+    return gulp.src(paths.favicon, {encoding:false})
+        .pipe(gulp.dest('dist'));
+});
+
+gulp.task('images', function () {
+    return gulp.src(paths.images, {encoding:false})
+        .pipe(gulp.dest('dist/images'));
+});
+
+// Task: Server files (PHP)
+gulp.task('server', function () {
+    return gulp.src(paths.server)
+        .pipe(phplint())
+        .pipe(phplint.reporter('fail'))
+            .on('error', function( err ) {
+                console.error("Error:", err.message);
+                this.emit('end');
+            })
+        .pipe(gulp.dest('dist/server'));
+});
+
+// Task: Clean the "dist" directory
+gulp.task('clean', function () {
+    return del(['dist/**', '!dist']); // Deletes all files inside dist, but keeps dist itself
+});
+
+// Task: Watch for Changes
+gulp.task('watch', function () {
+    gulp.watch(paths.scripts, gulp.series('scripts'));
+    gulp.watch(paths.styles, gulp.series('styles'));
+    gulp.watch(paths.html, gulp.series('html'));
+    gulp.watch(paths.server, gulp.series('server'));
+});
+
+function bootstrap() {
+    gulp.src(paths.bootstrap.style.src)
+        .pipe(cleanCSS())
+        .pipe(gulp.dest(paths.bootstrap.style.dest));
+    return gulp.src(paths.bootstrap.script.src)
+        .pipe(gulp.dest(paths.bootstrap.script.dest));
 }
 
-// Clean dist/
-async function clean() {
-  await deleteAsync(['dist']);
+function fontawesome() {
+    gulp.src(paths.fontawesome.fonts.src)
+        .pipe(gulp.dest(paths.fontawesome.fonts.dest));
+    return gulp.src(paths.fontawesome.style.src)
+        .pipe(cleanCSS())
+        .pipe(concat('font-awesome.min.css'))
+        .pipe(gulp.dest(paths.fontawesome.style.dest));
 }
 
-// Test
-function test(cb) {
-  const proc = spawn(
-    'node',
-    ['--require', 'ts-node/register', '--test', 'tests/**/*.test.ts'],
-    { stdio: 'inherit' }
-  );
-  proc.on('close', (code) => {
-    if (code !== 0) cb(new Error(`Tests failed with code ${code}`));
-    else cb();
-  });
+function angular() {
+    return gulp.src(paths.angular.script.src)
+        .pipe(gulp.dest(paths.angular.script.dest));
 }
 
-function visual(cb) {
-  const proc = spawn(
-    'npx',
-    ['http-server', '.', '-p', '8080', '-o', 'tests/visual/index.html'],
-    { stdio: 'inherit' }
-  );
-  proc.on('close', cb);
-}
+// Task to start the PHP server
+gulp.task('php-serve', function() {
+    connectPHP.server({
+        base: 'dist',      // Your base folder (where your PHP files are located)
+        port: 8000,      // Port to run the PHP server on
+        keepalive: true,  // Keep server running
+        middleware: function () {
+            return [
+                function (req, res, next) {
+                    if (req.url.startsWith('/QREvents/')) {
+                        req.url = req.url.replace('/QREvents/', '/');
+                    }
+                    next();
+                },
+                function customLogger(req, res, next) {
+                    console.log(`PHP Request: ${req.method} ${req.url}`);
+                    next();
+                }
+            ]
+        }
+    });
+});
 
-// Compile TypeScript
-function build() {
-  return tsProject.src()
-    .pipe(tsProject())
-    .pipe(gulp.dest('dist'));
-}
+// Task: Live Reload Server
+gulp.task('serve', function () {
+    bootstrap();
+    fontawesome();
+    angular();
+    connect.server({
+        root: 'dist',
+        livereload: true,
+        open: false,
+        notify: false,
+        port: 8080,
+        middleware: function () {
+            return [
+                function (req, res, next) {
+                    if (req.url.startsWith('/QREvents/')) {
+                        req.url = req.url.replace('/QREvents/', '/');
+                    }
+                    next();
+                },
+                function(req, res, next) {
+                    if (req.url.indexOf('/server') === 0) {
+                        console.log(`Proxying to PHP server: ${req.url}`); // Log the proxy action
+                        // Proxy PHP requests (for example: /server/index.php)
+                        httpProxy
+                            .createProxyServer({ target: 'http://localhost:8000' })
+                            .web(req, res);
+                    } else {
+                        next();
+                    }
+                },
+                function (req, res, next) {
+                    // 🚀 Disable ALL security policies
+                    res.setHeader('Content-Security-Policy', "default-src * 'unsafe-inline' 'unsafe-eval' data: blob:;");
+                    res.setHeader('Access-Control-Allow-Origin', '*'); // Allow all CORS
+                    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+                    res.setHeader('Access-Control-Allow-Headers', '*');
+                    // res.setHeader('Content-Security-Policy',
+                    //     "default-src 'self' http: https: data: blob: filesystem: http://localhost:8080; " +
+                    //     "script-src 'self' 'unsafe-inline' 'unsafe-eval' http: https: http://localhost:8080; " +
+                    //     "style-src 'self' 'unsafe-inline' http: https: http://localhost:8080; " +
+                    //     "media-src 'self' data: http: https: file: http://localhost:8080; " +
+                    //     "img-src 'self' data: http: https: http://localhost:8080;");
+                    next();
+                },
+                function customLogger(req, res, next) {
+                    console.log(`Request: ${req.method} ${req.url}`);
+                    next();
+                },
+                function delayResponse(req, res, next) {
+                    setTimeout(() => {
+                        next();
+                    }, 500); // Adds a 500ms delay to simulate latency
+                },
+                 // Error Handling Middleware
+                function errorHandler(err, req, res, next) {
+                    if (err) {
+                        const errorMsg = `[ERROR] ${new Date().toISOString()} ${req.method} ${req.url} - ${err.message}\n`;
+                        console.error(errorMsg);
 
-// Watch for changes
-function watch() {
-  gulp.watch([...paths.ts, ...paths.tests], gulp.series(clean, test, build, visual));
-}
+                        res.statusCode = 500;
+                        res.end('Internal Server Error');
+                    } else {
+                        next();
+                    }
+                }
+            ];
+        }
+    });
+});
 
-exports.clean = clean;
-exports.test = test;
-exports.build = gulp.series(clean, test, build);
-exports.watch = watch;
-exports.visual = gulp.series(clean, build, visual);
-exports.default = gulp.series(clean, test, build);
+// Handle CTRL+C / SIGINT
+process.on('SIGINT', () => {
+  if (isShuttingDown) return;
+  isShuttingDown = true;
+
+  console.log('\n🛑 Gracefully shutting down servers...');
+
+  try {
+    connect.serverClose();
+    console.log('🔌 Gulp connect server closed');
+  } catch (e) {
+    console.warn('Gulp connect was not running');
+  }
+
+  try {
+    connectPHP.closeServer();
+    console.log('🐘 PHP server closed');
+  } catch (e) {
+    console.warn('PHP server was not running or already closed');
+  }
+
+  process.exit();
+});
+
+// gulp.task
+
+gulp.task('send', function () {
+    return gulp.src(['dist/**/*','dist/.*'])
+        .pipe(rsync({
+            root: 'dist',
+            hostname: 'mycrewsheet',
+            destination: '/home2/opus/public_html/QREvents',
+            exclude: [".DS_Store"],
+            recursive: true,
+            silent: false,
+            compress: true,
+            incremental: true,
+            clean: true,
+            delete: true,
+            progress: true,
+            checksum: true
+        }))
+        .on('error', function(err) {
+            console.log("Rsync Error:",err);
+        });
+});
+
+gulp.task('watch-deploy', function () {
+    gulp.watch(paths.scripts, gulp.series('scripts','send'));
+    gulp.watch(paths.styles, gulp.series('styles','send'));
+    gulp.watch(paths.html, gulp.series('html','send'));
+    gulp.watch(paths.misc, gulp.series('misc','send'));
+    gulp.watch(paths.misc, gulp.series('favicon','send'));
+    gulp.watch(paths.misc, gulp.series('images','send'));
+    gulp.watch(paths.server, gulp.series('server', 'send'));
+})
+
+// Default Task
+gulp.task('default', gulp.parallel('scripts', 'styles', 'html', 'misc', 'favicon', 'images', 'server' ));
+gulp.task('local', gulp.parallel('scripts', 'styles', 'html', 'misc', 'favicon', 'images', 'server', 'watch', 'php-serve', 'serve' ));
+gulp.task('deploy', gulp.series('default', 'send' ));
+gulp.task('develop', gulp.series('clean', 'default', 'send', 'watch-deploy' ));
