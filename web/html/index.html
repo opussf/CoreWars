@@ -18,17 +18,23 @@
                         <tr><th>Prog1</th></tr>
                         <tr>
                             <td>
-                                <textarea id="prog1" rows="20" cols="50" onblur=""></textarea>
+                                <textarea id="prog1" rows="20" cols="50" onblur="corewars_prog(prog1)"></textarea>
                             </td>
                         </tr>
                         <tr><th>Prog2</th></tr>
                         <tr>
                             <td>
-                                <textarea id="prog2" rows="20" cols="50" onblur=""></textarea>
+                                <textarea id="prog2" rows="20" cols="50" onblur="corewars_prog(prog2)"></textarea>
                             </td>
                         </tr>
                     </table>
                     </form>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <button id="run" onclick="corewars_run()">Run</button>
+                    <button id="stop" onclick="corewars_stop()">Stop</button>
                 </td>
             </tr>
         </table>
