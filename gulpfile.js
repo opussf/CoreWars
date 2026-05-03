@@ -155,16 +155,16 @@ gulp.task('images', function () {
 });
 
 // Task: Server files (PHP)
-gulp.task('server', function () {
-    return gulp.src(paths.server)
-        .pipe(phplint())
-        .pipe(phplint.reporter('fail'))
-            .on('error', function( err ) {
-                console.error("Error:", err.message);
-                this.emit('end');
-            })
-        .pipe(gulp.dest('dist/server'));
-});
+// gulp.task('server', function () {
+//     return gulp.src(paths.server)
+//         .pipe(phplint())
+//         .pipe(phplint.reporter('fail'))
+//             .on('error', function( err ) {
+//                 console.error("Error:", err.message);
+//                 this.emit('end');
+//             })
+//         .pipe(gulp.dest('dist/server'));
+// });
 
 // Task: Clean the "dist" directory
 gulp.task('clean', function () {
@@ -352,7 +352,7 @@ gulp.task('watch-deploy', function () {
 })
 
 // Default Task
-gulp.task('default', gulp.parallel('scripts', 'styles', 'html', 'misc', 'favicon', 'images', 'server' ));
+gulp.task('default', gulp.parallel('scripts', 'styles', 'html', 'misc', 'favicon', 'images')); // , 'server' ));
 gulp.task('local', gulp.parallel('scripts', 'styles', 'html', 'misc', 'favicon', 'images', 'watch', 'serve')); // 'server', 'php-serve', 'serve' ));
 gulp.task('deploy', gulp.series('default', 'send' ));
 gulp.task('develop', gulp.series('clean', 'default', 'send', 'watch-deploy' ));
