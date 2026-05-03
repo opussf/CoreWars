@@ -1,10 +1,36 @@
 <!DOCTYPE html>
-<html>
+<html lang='en'>
     <head>
         <meta charset='utf-8'>
         <title>CoreWars</title>
+        <link rel="stylesheet" href="corewars.css" type="text/css"/>
+        <script src="corewars.js"></script>
     </head>
-    <body>
+    <body onload="corewars_onload()">
         <h1>CoreWars!</h1>
+        <table border="1">
+            <tr>
+                <td>
+                    <canvas id="corewarsfield" width="768" height="768"></canvas>
+                </td>
+                <td>
+                    <table border="1">
+                        <tr><th>Prog1</th></tr>
+                        <tr>
+                            <td>
+                                <textarea id="prog1" rows="20" cols="50" onblur=""></textarea>
+                            </td>
+                        </tr>
+                        <tr><th>Prog2</th></tr>
+                        <tr>
+                            <td>
+                                <textarea id="prog2" rows="20" cols="50" onblur=""></textarea>
+                            </td>
+                        </tr>
+                    </table>
+                    </form>
+                </td>
+            </tr>
+        </table>
     </body>
 </html>

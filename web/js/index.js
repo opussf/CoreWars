@@ -1,0 +1,3 @@
+function corewars_onload() {
+
+}

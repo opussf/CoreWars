@@ -6,5 +6,4 @@ target/
 
 # JS Project
 dist/
-node_modules
-
+node_modules/
