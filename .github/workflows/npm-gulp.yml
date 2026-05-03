@@ -25,12 +25,12 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Use Node.js ${{ matrix.node }}
-        uses: actions/setup-node@v6.4.0
-        with:
-          node-version: ${{ matrix.node }}
+      # - name: Use Node.js ${{ matrix.node }}
+      #   uses: actions/setup-node@v6.4.0
+      #   with:
+      #     node-version: ${{ matrix.node }}
 
-      - name: Build
-        run: |
-          npm ci
-          gulp
+      # - name: Build
+      #   run: |
+      #     npm ci
+      #     gulp
