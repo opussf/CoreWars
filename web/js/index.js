@@ -1,4 +1,4 @@
-cw = new CoreWars()
+let cw = new CoreWars()
 let cwUI;
 
 function corewars_onload() {

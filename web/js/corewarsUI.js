@@ -1,9 +1,9 @@
 class CoreWarsUI {
     constructor(canvas) {
-        this.canvas = canvas
+        this.canvas = canvas;
 
         // get the context
-        this.ctx = this.canvas.getContext("2d")
+        this.ctx = this.canvas.getContext("2d");
     }
 
     reset() {

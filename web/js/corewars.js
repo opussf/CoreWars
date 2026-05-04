@@ -1,5 +1,5 @@
 class CoreWars {
-    static frank
+    static #instance = null;
     static memSize = 4096;
 
     static instructions = {
@@ -8,15 +8,15 @@ class CoreWars {
     };
 
     constructor() {
-        if (CoreWars._instance) return CoreWars._instance;
+        if (CoreWars.#instance) return CoreWars.#instance;
         this.mem = new Uint32Array(CoreWars.memSize);
         this.flags = new Uint8Array(CoreWars.memSize);
-        CoreWars._instance = this;
+        CoreWars.#instance = this;
     }
 
     static getInstance() {
-        if (!CoreWars._instance) new CoreWars();
-        return CoreWars._instance;
+        if (!CoreWars.#instance) new CoreWars();
+        return CoreWars.#instance;
     }
 }
 
