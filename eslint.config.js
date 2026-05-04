@@ -16,9 +16,10 @@ module.exports = [
     },
     rules: {
       'no-undef': 'off',
-      'no-unused-vars': 'warn',
+      'no-unused-vars': 'off',
       'no-console': 'off',
       'semi': ['warn', 'always'],
+      "eqeqeq": ["error", "always", { "null": "ignore" }],
     }
   }
 ];
