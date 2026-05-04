@@ -13,7 +13,7 @@ const git = require('gulp-git');
 const replace = require('gulp-replace');
 // const rsync = require('gulp-rsync');
 const del = require('del');
-const eslint = require('gulp-eslint');
+const eslint = require('gulp-eslint-new');
 const jsValidate = require('gulp-jsvalidate');
 // const phplint = require('gulp-phplint');
 // const connectPHP = require('gulp-connect-php');  // PHP server
@@ -96,10 +96,12 @@ gulp.task('scripts', function () {
         .pipe(gulpIf(isProd, removeLogging({verbose: true})))
         .pipe(gulpIf(!isDebug, removeLogging({verbose: true})))
         .pipe(eslint())
-        .pipe(jsValidate()
-            .on('error', function( err ) {
-                console.error("JS Validation Error:", err.message);
-                this.emit('end'); }))
+        // .pipe(jsValidate()
+        //     .on('error', function( err ) {
+        //         console.error("JS Validation Error:", err.message);
+        //         this.emit('end'); }))
+        .pipe(eslint.format())
+        .pipe(eslint.failAfterError())
         .pipe(gulpIf(isProd, concat(`${projectName}.min.js`)))
         .pipe(gulpIf(!isProd, concat(`${projectName}.js`)))
         .pipe(gulp.dest('dist'))
